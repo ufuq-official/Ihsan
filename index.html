@@ -1,14 +1,16 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مكتبة المهداوي - النظام المتكامل</title>
-    <!-- إضافة Chart.js للرسوم البيانية -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
+    </script>
     <style>
-        /* ====== المتغيرات العامة ====== */
+        /* ====== المتغيرات ====== */
         :root {
             --primary: #1a3a5c;
             --secondary: #c9a84c;
@@ -21,9 +23,9 @@
             --shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
             --radius: 15px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --sidebar-width: 320px;
         }
 
-        /* ====== إعادة تعيين ====== */
         * {
             margin: 0;
             padding: 0;
@@ -35,7 +37,8 @@
             background: var(--light-bg);
             color: var(--text-dark);
             line-height: 1.7;
-            padding-bottom: 3rem;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
         /* ====== الهيدر ====== */
@@ -75,6 +78,171 @@
             flex-wrap: wrap;
         }
 
+        /* ====== زر الهامبرغر ====== */
+        .hamburger {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            cursor: pointer;
+            padding: 0.6rem 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            transition: var(--transition);
+        }
+
+        .hamburger:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: var(--secondary);
+        }
+
+        .hamburger span {
+            display: block;
+            width: 28px;
+            height: 3px;
+            background: white;
+            border-radius: 3px;
+            transition: var(--transition);
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        /* ====== القائمة الجانبية ====== */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -var(--sidebar-width);
+            width: var(--sidebar-width);
+            height: 100%;
+            background: white;
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 2rem 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.open {
+            right: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+        }
+
+        .sidebar-header h3 {
+            color: var(--primary);
+            font-size: 1.3rem;
+        }
+
+        .sidebar-close {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #999;
+            transition: var(--transition);
+        }
+
+        .sidebar-close:hover {
+            color: var(--danger);
+            transform: rotate(90deg);
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            flex: 1;
+        }
+
+        .sidebar-menu .btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .sidebar-menu .btn:hover {
+            transform: translateX(-5px);
+        }
+
+        .btn-sidebar-attendance {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+        .btn-sidebar-attendance:hover {
+            background: #bbdefb;
+        }
+
+        .btn-sidebar-items {
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+        .btn-sidebar-items:hover {
+            background: #c8e6c9;
+        }
+
+        .btn-sidebar-sales {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        .btn-sidebar-sales:hover {
+            background: #ffe0b2;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 2px solid #eee;
+            text-align: center;
+            color: #999;
+            font-size: 0.85rem;
+        }
+
+        /* ====== الأزرار العامة ====== */
         .btn {
             padding: 0.6rem 1.8rem;
             border: none;
@@ -90,7 +258,7 @@
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
 
         .btn-primary {
@@ -120,17 +288,6 @@
         .btn-info {
             background: var(--info);
             color: white;
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: white;
-            border: 2px solid white;
-        }
-
-        .btn-outline:hover {
-            background: white;
-            color: var(--primary);
         }
 
         .btn-sm {
@@ -177,10 +334,14 @@
             background: linear-gradient(to left, var(--secondary), transparent);
         }
 
+        .card.hidden {
+            display: none;
+        }
+
         /* ====== شبكة المخططات ====== */
         .charts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
             gap: 2rem;
             margin: 1.5rem 0;
         }
@@ -204,6 +365,36 @@
             max-width: 100%;
         }
 
+        /* ====== الإحصائيات ====== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            text-align: center;
+            box-shadow: var(--shadow);
+            border-bottom: 4px solid var(--secondary);
+        }
+
+        .stat-card .number {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: block;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+
         /* ====== النماذج ====== */
         .form-group {
             display: flex;
@@ -215,7 +406,7 @@
         .form-group input,
         .form-group select {
             flex: 1;
-            min-width: 200px;
+            min-width: 180px;
             padding: 0.8rem 1.2rem;
             border: 2px solid #e0e0e0;
             border-radius: 10px;
@@ -232,10 +423,6 @@
             background: white;
         }
 
-        .form-group input::placeholder {
-            color: #aaa;
-        }
-
         /* ====== الجداول ====== */
         .table-responsive {
             overflow-x: auto;
@@ -245,7 +432,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
-            font-size: 0.95rem;
+            font-size: 0.92rem;
         }
 
         table thead {
@@ -254,14 +441,14 @@
         }
 
         table th {
-            padding: 1rem 1.2rem;
+            padding: 0.9rem 1.2rem;
             text-align: right;
             font-weight: 600;
             white-space: nowrap;
         }
 
         table td {
-            padding: 0.9rem 1.2rem;
+            padding: 0.8rem 1.2rem;
             border-bottom: 1px solid #eee;
             vertical-align: middle;
         }
@@ -288,7 +475,39 @@
             color: #721c24;
         }
 
-        /* ====== أزرار الإجراءات في الجدول ====== */
+        .category-tag {
+            display: inline-block;
+            padding: 0.2rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .category-print {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+        .category-stamp {
+            background: #fce4ec;
+            color: #880e4f;
+        }
+        .category-id {
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+        .category-posters {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        .category-clothes {
+            background: #f3e5f5;
+            color: #4a148c;
+        }
+        .category-badge {
+            background: #e0f7fa;
+            color: #006064;
+        }
+
         .action-btn {
             padding: 0.3rem 0.8rem;
             border: none;
@@ -309,27 +528,8 @@
             color: white;
         }
 
-        .action-btn.print {
-            background: var(--primary);
-            color: white;
-        }
-
         .action-btn:hover {
             transform: scale(1.05);
-        }
-
-        /* ====== أزرار التقارير ====== */
-        .report-buttons {
-            display: flex;
-            gap: 0.8rem;
-            flex-wrap: wrap;
-            margin: 1rem 0;
-        }
-
-        .report-buttons .btn {
-            flex: 1;
-            min-width: 150px;
-            justify-content: center;
         }
 
         /* ====== الإشعارات ====== */
@@ -394,7 +594,7 @@
             padding: 2.5rem;
             border-radius: var(--radius);
             max-width: 500px;
-            width: 90%;
+            width: 92%;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             animation: modalIn 0.3s ease-out;
         }
@@ -436,70 +636,6 @@
             justify-content: center;
         }
 
-        /* ====== الإحصائيات ====== */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: var(--radius);
-            text-align: center;
-            box-shadow: var(--shadow);
-            border-bottom: 4px solid var(--secondary);
-        }
-
-        .stat-card .number {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--primary);
-            display: block;
-        }
-
-        .stat-card .label {
-            color: #666;
-            font-size: 0.9rem;
-            margin-top: 0.3rem;
-        }
-
-        /* ====== فئات السلع ====== */
-        .category-tag {
-            display: inline-block;
-            padding: 0.2rem 0.8rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .category-print {
-            background: #e3f2fd;
-            color: #0d47a1;
-        }
-        .category-stamp {
-            background: #fce4ec;
-            color: #880e4f;
-        }
-        .category-id {
-            background: #e8f5e9;
-            color: #1b5e20;
-        }
-        .category-posters {
-            background: #fff3e0;
-            color: #e65100;
-        }
-        .category-clothes {
-            background: #f3e5f5;
-            color: #4a148c;
-        }
-        .category-badge {
-            background: #e0f7fa;
-            color: #006064;
-        }
-
         /* ====== التجاوب ====== */
         @media (max-width: 768px) {
             header {
@@ -509,6 +645,10 @@
 
             .header-actions {
                 justify-content: center;
+            }
+
+            .container {
+                padding: 0 1rem;
             }
 
             .card {
@@ -522,8 +662,8 @@
 
             table th,
             table td {
-                padding: 0.6rem 0.8rem;
-                font-size: 0.85rem;
+                padding: 0.5rem 0.7rem;
+                font-size: 0.82rem;
             }
 
             .stats-grid {
@@ -533,10 +673,21 @@
             .charts-grid {
                 grid-template-columns: 1fr;
             }
+
+            .sidebar {
+                width: 85%;
+                right: -85%;
+            }
+
+            .sidebar.open {
+                right: 0;
+            }
         }
 
         @media print {
             header,
+            .sidebar,
+            .sidebar-overlay,
             .no-print {
                 display: none !important;
             }
@@ -548,6 +699,27 @@
                 break-inside: avoid;
             }
         }
+
+        /* ====== شريط التبويب ====== */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        /* ====== عناصر مخفية للـ PDF ====== */
+        .pdf-hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -558,16 +730,45 @@
             📚 مكتبة <span>المهداوي</span>
         </div>
         <div class="header-actions">
-            <div id="clockDisplay" style="color:white;font-weight:500;background:rgba(255,255,255,0.1);padding:0.5rem 1rem;border-radius:10px;">
-                <!-- سيتم عرض الساعة هنا -->
+            <div id="clockDisplay" style="color:white;font-weight:500;background:rgba(255,255,255,0.1);padding:0.5rem 1rem;border-radius:10px;font-size:0.9rem;">
+                <!-- الساعة -->
             </div>
+            <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
             <button class="btn btn-primary" id="loginBtn" onclick="showLoginModal()">
                 🔑 تسجيل الدخول
             </button>
         </div>
     </header>
 
-    <!-- ====== المودال ====== -->
+    <!-- ====== القائمة الجانبية ====== -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>📋 القائمة</h3>
+            <button class="sidebar-close" onclick="closeSidebar()">✕</button>
+        </div>
+        <div class="sidebar-menu">
+            <button class="btn btn-sidebar-attendance" onclick="showSection('attendance')">
+                ⏱️ تسجيل الحضور
+            </button>
+            <button class="btn btn-sidebar-items" onclick="showSection('items')">
+                📦 إدارة السلع
+            </button>
+            <button class="btn btn-sidebar-sales" onclick="showSection('sales')">
+                🛒 سجل المبيعات
+            </button>
+        </div>
+        <div class="sidebar-footer">
+            <p>نظام مكتبة المهداوي</p>
+            <p style="font-size:0.75rem;color:#bbb;">الإصدار 2.0</p>
+        </div>
+    </div>
+
+    <!-- ====== مودال تسجيل الدخول ====== -->
     <div class="modal-overlay" id="loginModal">
         <div class="modal">
             <h3>🔐 تسجيل الدخول</h3>
@@ -581,159 +782,26 @@
             </div>
             <p style="margin-top:1rem;font-size:0.85rem;color:#666;text-align:center;">
                 المستخدمون: abbas / mustafa / ahmed / abdullah<br>
-                كلمة المرور للجميع: 123456
+                كلمة المرور: 123456
             </p>
         </div>
     </div>
 
-    <!-- ====== المحتوى الرئيسي ====== -->
-    <div class="container">
-
-        <!-- ====== الإحصائيات ====== -->
-        <div class="stats-grid" id="statsGrid">
-            <div class="stat-card">
-                <span class="number" id="totalEmployees">0</span>
-                <span class="label">👥 الموظفين</span>
-            </div>
-            <div class="stat-card">
-                <span class="number" id="todayPresent">0</span>
-                <span class="label">✅ الحاضرون اليوم</span>
-            </div>
-            <div class="stat-card">
-                <span class="number" id="totalItems">0</span>
-                <span class="label">📦 السلع المسجلة</span>
-            </div>
-            <div class="stat-card">
-                <span class="number" id="todaySales">0</span>
-                <span class="label">💰 مبيعات اليوم</span>
-            </div>
-            <div class="stat-card">
-                <span class="number" id="totalRevenue">0</span>
-                <span class="label">📊 إجمالي الدخل</span>
-            </div>
-        </div>
-
-        <!-- ====== الرسوم البيانية ====== -->
-        <div class="card">
-            <h2>📊 لوحة الإحصائيات والرسوم البيانية</h2>
-            <div class="charts-grid">
-                <div class="chart-box">
-                    <h3>📈 مبيعات اليوم (أعلى 5 سلع)</h3>
-                    <canvas id="salesChart"></canvas>
-                </div>
-                <div class="chart-box">
-                    <h3>👥 حضور الموظفين (هذا الأسبوع)</h3>
-                    <canvas id="attendanceChart"></canvas>
-                </div>
-                <div class="chart-box">
-                    <h3>💰 توزيع الإيرادات حسب القسم</h3>
-                    <canvas id="revenueChart"></canvas>
-                </div>
-                <div class="chart-box">
-                    <h3>📦 عدد السلع حسب التصنيف</h3>
-                    <canvas id="categoryChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- ====== تسجيل الدخول/الخروج ====== -->
-        <div class="card" id="attendanceCard">
-            <h2>⏱️ تسجيل الحضور والانصراف</h2>
-            <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
-                <button class="btn btn-success" onclick="clockIn()">✅ تسجيل الدخول</button>
-                <button class="btn btn-danger" onclick="clockOut()">⏹️ تسجيل الخروج</button>
-                <button class="btn btn-warning" onclick="printAttendanceReport('all')">🖨️ طباعة الحضور الكامل</button>
-                <button class="btn btn-warning" onclick="printAttendanceReport('weekly')">🖨️ طباعة الأسبوعي</button>
-                <button class="btn btn-warning" onclick="printAttendanceReport('monthly')">🖨️ طباعة الشهري</button>
-            </div>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>الموظف</th>
-                            <th>توقيت الدخول</th>
-                            <th>توقيت الخروج</th>
-                            <th>المدة</th>
-                            <th>الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="attendanceBody">
-                        <tr><td colspan="5" style="text-align:center;color:#999;">لا يوجد سجل حضور</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- ====== إدارة الأسعار ====== -->
-        <div class="card" id="priceCard">
-            <h2>💰 إدارة الأسعار - قائمة السلع الكاملة</h2>
+    <!-- ====== مودال تعديل المبيعات ====== -->
+    <div class="modal-overlay" id="editSaleModal">
+        <div class="modal">
+            <h3>✏️ تعديل عملية بيع</h3>
             <div class="form-group">
-                <input type="text" id="itemName" placeholder="اسم السلعة">
-                <input type="number" id="itemPrice" placeholder="السعر (دينار)">
-                <select id="itemCategory">
-                    <option value="مطبعة">📄 مطبعة</option>
-                    <option value="استنساخ">🖨️ استنساخ</option>
-                    <option value="هويات">🪪 هويات</option>
-                    <option value="باجات">🎖️ باجات</option>
-                    <option value="بوسترات">🖼️ بوسترات</option>
-                    <option value="اختام">🔏 اختام</option>
-                    <option value="كارتات">💳 كارتات</option>
-                    <option value="ملابس">👕 ملابس</option>
-                    <option value="فايلات">📁 فايلات</option>
-                </select>
-                <button class="btn btn-success" onclick="saveItem()">💾 حفظ</button>
-                <button class="btn btn-danger" onclick="clearForm()">🗑️ إلغاء</button>
+                <input type="text" id="editSaleItemName" placeholder="اسم السلعة" disabled style="background:#f0f0f0;">
+                <input type="number" id="editSaleQuantity" placeholder="الكمية" min="1">
+                <input type="number" id="editSalePrice" placeholder="السعر الإجمالي" step="0.01">
+                <input type="text" id="editSaleBuyer" placeholder="اسم المشتري">
             </div>
-            <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;">
-                <button class="btn btn-primary" onclick="printPriceList()">🖨️ طباعة قائمة الأسعار</button>
-                <button class="btn btn-info" onclick="addDefaultItems()">📋 إضافة السلع الافتراضية</button>
-            </div>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>السلعة</th>
-                            <th>السعر</th>
-                            <th>التصنيف</th>
-                            <th>الإجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="priceBody">
-                        <tr><td colspan="5" style="text-align:center;color:#999;">لا توجد سلع مسجلة</td></tr>
-                    </tbody>
-                </table>
+            <div class="modal-actions">
+                <button class="btn btn-success" onclick="saveEditSale()">💾 حفظ</button>
+                <button class="btn btn-danger" onclick="closeEditSaleModal()">إلغاء</button>
             </div>
         </div>
-
-        <!-- ====== المبيعات ====== -->
-        <div class="card" id="salesCard">
-            <h2>🛒 سجل المبيعات</h2>
-            <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
-                <button class="btn btn-success" onclick="showSaleModal()">➕ إضافة بيع</button>
-                <button class="btn btn-primary" onclick="printSalesReport()">🖨️ طباعة المبيعات</button>
-                <button class="btn btn-warning" onclick="printUsefulMaterials()">📚 طباعة المواد المفيدة</button>
-            </div>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>السلعة</th>
-                            <th>الكمية</th>
-                            <th>السعر الإجمالي</th>
-                            <th>المشترى</th>
-                            <th>التاريخ</th>
-                            <th>الموظف</th>
-                        </tr>
-                    </thead>
-                    <tbody id="salesBody">
-                        <tr><td colspan="7" style="text-align:center;color:#999;">لا توجد مبيعات مسجلة</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
     </div>
 
     <!-- ====== مودال إضافة بيع ====== -->
@@ -754,12 +822,166 @@
         </div>
     </div>
 
+    <!-- ====== المحتوى الرئيسي ====== -->
+    <div class="container">
+
+        <!-- ====== قسم الإحصائيات والرسوم البيانية (الرئيسي) ====== -->
+        <div id="mainDashboard">
+
+            <!-- الإحصائيات -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <span class="number" id="totalEmployees">0</span>
+                    <span class="label">👥 الموظفين</span>
+                </div>
+                <div class="stat-card">
+                    <span class="number" id="todayPresent">0</span>
+                    <span class="label">✅ الحاضرون اليوم</span>
+                </div>
+                <div class="stat-card">
+                    <span class="number" id="totalItems">0</span>
+                    <span class="label">📦 السلع المسجلة</span>
+                </div>
+                <div class="stat-card">
+                    <span class="number" id="todaySales">0</span>
+                    <span class="label">💰 مبيعات اليوم</span>
+                </div>
+                <div class="stat-card">
+                    <span class="number" id="totalRevenue">0</span>
+                    <span class="label">📊 إجمالي الدخل</span>
+                </div>
+            </div>
+
+            <!-- الرسوم البيانية -->
+            <div class="card">
+                <h2>📊 لوحة الإحصائيات والرسوم البيانية</h2>
+                <div class="charts-grid">
+                    <div class="chart-box">
+                        <h3>📈 مبيعات اليوم (أعلى 5 سلع)</h3>
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3>👥 حضور الموظفين (هذا الأسبوع)</h3>
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3>💰 توزيع الإيرادات حسب القسم</h3>
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3>📦 عدد السلع حسب التصنيف</h3>
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====== قسم تسجيل الحضور ====== -->
+        <div class="card tab-content" id="attendanceSection">
+            <h2>⏱️ تسجيل الحضور والانصراف</h2>
+            <div class="section-actions">
+                <button class="btn btn-success" onclick="clockIn()">✅ تسجيل الدخول</button>
+                <button class="btn btn-danger" onclick="clockOut()">⏹️ تسجيل الخروج</button>
+                <button class="btn btn-warning" onclick="generateAttendancePDF('all')">📄 PDF الكامل</button>
+                <button class="btn btn-warning" onclick="generateAttendancePDF('weekly')">📄 PDF الأسبوعي</button>
+                <button class="btn btn-warning" onclick="generateAttendancePDF('monthly')">📄 PDF الشهري</button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الموظف</th>
+                            <th>توقيت الدخول</th>
+                            <th>توقيت الخروج</th>
+                            <th>المدة</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceBody">
+                        <tr><td colspan="5" style="text-align:center;color:#999;">لا يوجد سجل حضور</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ====== قسم إدارة السلع ====== -->
+        <div class="card tab-content" id="itemsSection">
+            <h2>💰 إدارة الأسعار - قائمة السلع الكاملة</h2>
+            <div class="form-group">
+                <input type="text" id="itemName" placeholder="اسم السلعة">
+                <input type="number" id="itemPrice" placeholder="السعر (دينار)">
+                <select id="itemCategory">
+                    <option value="مطبعة">📄 مطبعة</option>
+                    <option value="استنساخ">🖨️ استنساخ</option>
+                    <option value="هويات">🪪 هويات</option>
+                    <option value="باجات">🎖️ باجات</option>
+                    <option value="بوسترات">🖼️ بوسترات</option>
+                    <option value="اختام">🔏 اختام</option>
+                    <option value="كارتات">💳 كارتات</option>
+                    <option value="ملابس">👕 ملابس</option>
+                    <option value="فايلات">📁 فايلات</option>
+                </select>
+                <button class="btn btn-success" onclick="saveItem()">💾 حفظ</button>
+                <button class="btn btn-danger" onclick="clearForm()">🗑️ إلغاء</button>
+            </div>
+            <div class="section-actions">
+                <button class="btn btn-primary" onclick="generatePricePDF()">📄 PDF قائمة الأسعار</button>
+                <button class="btn btn-info" onclick="addDefaultItems()">📋 إضافة السلع الافتراضية</button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>السلعة</th>
+                            <th>السعر</th>
+                            <th>التصنيف</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="priceBody">
+                        <tr><td colspan="5" style="text-align:center;color:#999;">لا توجد سلع مسجلة</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ====== قسم سجل المبيعات ====== -->
+        <div class="card tab-content" id="salesSection">
+            <h2>🛒 سجل المبيعات</h2>
+            <div class="section-actions">
+                <button class="btn btn-success" onclick="showSaleModal()">➕ إضافة بيع</button>
+                <button class="btn btn-primary" onclick="generateSalesPDF()">📄 PDF المبيعات</button>
+                <button class="btn btn-warning" onclick="generateMaterialsPDF()">📚 PDF المواد المفيدة</button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>السلعة</th>
+                            <th>الكمية</th>
+                            <th>السعر الإجمالي</th>
+                            <th>المشتري</th>
+                            <th>التاريخ</th>
+                            <th>الموظف</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesBody">
+                        <tr><td colspan="8" style="text-align:center;color:#999;">لا توجد مبيعات مسجلة</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
     <script>
         // ================================================================
         // ====== البيانات الأساسية ======
         // ================================================================
 
-        // الموظفين
         const EMPLOYEES = [
             { username: 'abbas', name: 'عباس', password: '123456' },
             { username: 'mustafa', name: 'مصطفى', password: '123456' },
@@ -767,12 +989,12 @@
             { username: 'abdullah', name: 'عبدالله', password: '123456' }
         ];
 
-        // بيانات التخزين
         let attendanceLog = JSON.parse(localStorage.getItem('attendanceLog')) || [];
         let priceList = JSON.parse(localStorage.getItem('priceList')) || [];
         let salesLog = JSON.parse(localStorage.getItem('salesLog')) || [];
         let currentUser = null;
         let editingIndex = -1;
+        let editingSaleId = null;
 
         // متغيرات المخططات
         let salesChartInstance = null;
@@ -781,62 +1003,45 @@
         let categoryChartInstance = null;
 
         // ================================================================
-        // ====== السلع الافتراضية (حسب القائمة المذكورة) ======
+        // ====== السلع الافتراضية ======
         // ================================================================
 
         const DEFAULT_ITEMS = [
-            // === مطبعة ===
             { name: 'مستمسكات ملون', price: 500, category: 'مطبعة' },
             { name: 'مستمسكات أبيض وأسود', price: 500, category: 'مطبعة' },
             { name: 'سحب موبايل المستمسك', price: 1000, category: 'مطبعة' },
             { name: 'سحب موبايل الوثيقة', price: 1000, category: 'مطبعة' },
             { name: 'صور معاملات 6 صور', price: 4000, category: 'مطبعة' },
             { name: 'صور معاملات 12 صورة', price: 7000, category: 'مطبعة' },
-
-            // === استنساخ ===
             { name: 'استنساخ مستمسكات ملون', price: 500, category: 'استنساخ' },
             { name: 'استنساخ مستمسكات أبيض وأسود', price: 500, category: 'استنساخ' },
             { name: 'استنساخ سحب موبايل', price: 1000, category: 'استنساخ' },
             { name: 'استنساخ صور 6 صور', price: 4000, category: 'استنساخ' },
             { name: 'استنساخ صور 12 صورة', price: 7000, category: 'استنساخ' },
-
-            // === هويات ===
             { name: 'كبس هويات', price: 1000, category: 'هويات' },
             { name: 'هوية عظم عاج', price: 5000, category: 'هويات' },
             { name: 'تقديم بطاقة وطنية حجز', price: 5000, category: 'هويات' },
             { name: 'استمارة بطاقة وطنية', price: 5000, category: 'هويات' },
             { name: 'حجز جواز', price: 5000, category: 'هويات' },
-            { name: 'تقديم تعيين (5-10 الف)', price: 7500, category: 'هويات' },
+            { name: 'تقديم تعيين', price: 7500, category: 'هويات' },
             { name: 'تقديم بطاقة تموينية', price: 5000, category: 'هويات' },
-
-            // === باجات ===
             { name: 'باج شرطة مستطيل ذهبي دمبوس', price: 5000, category: 'باجات' },
             { name: 'باج شرطة مستطيل ذهبي مغناطيس', price: 5000, category: 'باجات' },
             { name: 'باج أشكال غير مستطيل حديد', price: 7000, category: 'باجات' },
             { name: 'باج بلاستك حفر ليزر', price: 10000, category: 'باجات' },
-
-            // === بوسترات ===
             { name: 'بوستر فلكس خفيف (المتر)', price: 10000, category: 'بوسترات' },
             { name: 'بوستر فلكس ثخين (المتر)', price: 15000, category: 'بوسترات' },
             { name: 'ستيكر لاسق (المتر)', price: 15000, category: 'بوسترات' },
-
-            // === اختام ===
             { name: 'ختم صغير', price: 15000, category: 'اختام' },
             { name: 'ختم وسط', price: 20000, category: 'اختام' },
             { name: 'ختم بيضوي', price: 45000, category: 'اختام' },
             { name: 'ختم دائري', price: 25000, category: 'اختام' },
-
-            // === كارتات ===
             { name: 'كارتات شخصية 100 كارت خفيف', price: 10000, category: 'كارتات' },
             { name: 'كارتات شخصية 100 كارت ثخين', price: 15000, category: 'كارتات' },
-
-            // === ملابس ===
             { name: 'طباعة ملابس كتابة', price: 10000, category: 'ملابس' },
             { name: 'طباعة ملابس صورة', price: 10000, category: 'ملابس' },
             { name: 'طباعة ملابس كتابة + صورة', price: 15000, category: 'ملابس' },
             { name: 'طباعة ملابس وجه وظهر', price: 15000, category: 'ملابس' },
-
-            // === فايلات ===
             { name: 'فايل شفاف', price: 500, category: 'فايلات' },
             { name: 'فايل طبك', price: 1000, category: 'فايلات' }
         ];
@@ -845,21 +1050,14 @@
             if (priceList.length > 0) {
                 if (!confirm('سيتم إضافة السلع الافتراضية إلى القائمة الحالية. هل تريد المتابعة؟')) return;
             }
-
             let added = 0;
             DEFAULT_ITEMS.forEach(item => {
-                // تجنب التكرار
                 const exists = priceList.some(p => p.name === item.name && p.category === item.category);
                 if (!exists) {
-                    priceList.push({
-                        id: Date.now() + added,
-                        ...item,
-                        dateAdded: new Date().toLocaleDateString('ar-EG')
-                    });
+                    priceList.push({ id: Date.now() + added, ...item, dateAdded: new Date().toLocaleDateString('ar-EG') });
                     added++;
                 }
             });
-
             if (added > 0) {
                 localStorage.setItem('priceList', JSON.stringify(priceList));
                 showNotification(`✅ تم إضافة ${added} سلعة جديدة`);
@@ -875,7 +1073,7 @@
 
         function updateClock() {
             const now = new Date();
-            const str = now.toLocaleString('ar-EG', {
+            document.getElementById('clockDisplay').textContent = '🕐 ' + now.toLocaleString('ar-EG', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -884,7 +1082,6 @@
                 minute: '2-digit',
                 second: '2-digit'
             });
-            document.getElementById('clockDisplay').textContent = '🕐 ' + str;
         }
         setInterval(updateClock, 1000);
         updateClock();
@@ -903,6 +1100,48 @@
                 div.style.transition = 'opacity 0.5s';
                 setTimeout(() => div.remove(), 500);
             }, 4000);
+        }
+
+        // ================================================================
+        // ====== القائمة الجانبية ======
+        // ================================================================
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const hamburger = document.getElementById('hamburgerBtn');
+            const isOpen = sidebar.classList.contains('open');
+
+            if (isOpen) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+                hamburger.classList.remove('active');
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+                hamburger.classList.add('active');
+            }
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+            document.getElementById('hamburgerBtn').classList.remove('active');
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+
+            if (section === 'attendance') {
+                document.getElementById('attendanceSection').classList.add('active');
+            } else if (section === 'items') {
+                document.getElementById('itemsSection').classList.add('active');
+            } else if (section === 'sales') {
+                document.getElementById('salesSection').classList.add('active');
+            }
+
+            closeSidebar();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         // ================================================================
@@ -943,7 +1182,6 @@
 
         function logoutUser() {
             if (!currentUser) return;
-            // التحقق من وجود تسجيل دخول مفتوح قبل الخروج
             const openRecord = attendanceLog.find(r => r.username === currentUser && r.status === 'حاضر');
             if (openRecord) {
                 clockOut();
@@ -963,13 +1201,11 @@
                 showNotification('يجب تسجيل الدخول أولاً', 'error');
                 return;
             }
-
             const openRecord = attendanceLog.find(r => r.username === currentUser && r.status === 'حاضر');
             if (openRecord) {
                 showNotification('لديك تسجيل دخول مفتوح بالفعل', 'error');
                 return;
             }
-
             const now = new Date();
             const entry = {
                 id: Date.now(),
@@ -989,7 +1225,6 @@
                 duration: null,
                 status: 'حاضر'
             };
-
             attendanceLog.push(entry);
             localStorage.setItem('attendanceLog', JSON.stringify(attendanceLog));
             showNotification(`✅ تم تسجيل حضور ${currentUser}`);
@@ -1001,13 +1236,11 @@
                 showNotification('يجب تسجيل الدخول أولاً', 'error');
                 return;
             }
-
             const lastEntry = attendanceLog.filter(r => r.username === currentUser && r.status === 'حاضر').pop();
             if (!lastEntry) {
                 showNotification('لا يوجد تسجيل دخول مفتوح لتسجيل الخروج', 'error');
                 return;
             }
-
             const now = new Date();
             lastEntry.logoutTime = now.toLocaleString('ar-EG', {
                 weekday: 'long',
@@ -1020,19 +1253,17 @@
             });
             lastEntry.logoutTimestamp = now.getTime();
             lastEntry.status = 'منصرف';
-
             const diffMs = lastEntry.logoutTimestamp - lastEntry.loginTimestamp;
             const hours = Math.floor(diffMs / (1000 * 60 * 60));
             const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
             lastEntry.duration = `${hours} س و ${minutes} د`;
-
             localStorage.setItem('attendanceLog', JSON.stringify(attendanceLog));
             showNotification(`⏹️ تم تسجيل خروج ${currentUser}`);
             updateUI();
         }
 
         // ================================================================
-        // ====== إدارة الأسعار ======
+        // ====== إدارة السلع ======
         // ================================================================
 
         function saveItem() {
@@ -1107,13 +1338,11 @@
                 showNotification('لا توجد سلع مسجلة، أضف سلعاً أولاً', 'error');
                 return;
             }
-
             const select = document.getElementById('saleItemSelect');
             select.innerHTML = '<option value="">-- اختر السلعة --</option>' +
                 priceList.map(item =>
                     `<option value="${item.id}">${item.name} - ${item.price.toFixed(0)} د.ع (${item.category})</option>`
                 ).join('');
-
             document.getElementById('saleQuantity').value = 1;
             document.getElementById('saleBuyer').value = '';
             document.getElementById('saleModal').classList.add('active');
@@ -1172,40 +1401,107 @@
         }
 
         // ================================================================
+        // ====== تعديل وحذف المبيعات ======
+        // ================================================================
+
+        function editSale(id) {
+            const sale = salesLog.find(s => s.id === id);
+            if (!sale) {
+                showNotification('العملية غير موجودة', 'error');
+                return;
+            }
+
+            editingSaleId = id;
+            document.getElementById('editSaleItemName').value = sale.itemName;
+            document.getElementById('editSaleQuantity').value = sale.quantity;
+            document.getElementById('editSalePrice').value = sale.total;
+            document.getElementById('editSaleBuyer').value = sale.buyer;
+            document.getElementById('editSaleModal').classList.add('active');
+        }
+
+        function closeEditSaleModal() {
+            document.getElementById('editSaleModal').classList.remove('active');
+            editingSaleId = null;
+        }
+
+        function saveEditSale() {
+            if (editingSaleId === null) {
+                showNotification('حدث خطأ، يرجى المحاولة مرة أخرى', 'error');
+                return;
+            }
+
+            const saleIndex = salesLog.findIndex(s => s.id === editingSaleId);
+            if (saleIndex === -1) {
+                showNotification('العملية غير موجودة', 'error');
+                return;
+            }
+
+            const quantity = parseInt(document.getElementById('editSaleQuantity').value) || 0;
+            const total = parseFloat(document.getElementById('editSalePrice').value) || 0;
+            const buyer = document.getElementById('editSaleBuyer').value.trim() || 'زائر';
+
+            if (quantity < 1) {
+                showNotification('الكمية يجب أن تكون أكبر من صفر', 'error');
+                return;
+            }
+            if (total <= 0) {
+                showNotification('السعر الإجمالي يجب أن يكون أكبر من صفر', 'error');
+                return;
+            }
+
+            const unitPrice = total / quantity;
+            salesLog[saleIndex].quantity = quantity;
+            salesLog[saleIndex].total = total;
+            salesLog[saleIndex].unitPrice = unitPrice;
+            salesLog[saleIndex].buyer = buyer;
+
+            localStorage.setItem('salesLog', JSON.stringify(salesLog));
+            closeEditSaleModal();
+            showNotification('✅ تم تعديل عملية البيع بنجاح');
+            updateUI();
+        }
+
+        function deleteSale(id) {
+            if (!confirm('هل أنت متأكد من حذف هذه العملية؟')) return;
+
+            const sale = salesLog.find(s => s.id === id);
+            salesLog = salesLog.filter(s => s.id !== id);
+            localStorage.setItem('salesLog', JSON.stringify(salesLog));
+            showNotification(`🗑️ تم حذف عملية بيع "${sale ? sale.itemName : ''}"`);
+            updateUI();
+        }
+
+        // ================================================================
         // ====== عرض الجداول ======
         // ================================================================
 
         function renderAttendanceTable() {
             const tbody = document.getElementById('attendanceBody');
             if (!tbody) return;
-
             if (attendanceLog.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">لا يوجد سجل حضور</td></tr>';
                 return;
             }
-
             tbody.innerHTML = attendanceLog
                 .sort((a, b) => b.loginTimestamp - a.loginTimestamp)
                 .map(r => `
-                        <tr>
-                            <td><strong>${r.username}</strong></td>
-                            <td>${r.loginTime}</td>
-                            <td>${r.logoutTime || '---'}</td>
-                            <td>${r.duration || '---'}</td>
-                            <td><span class="status-badge ${r.status === 'حاضر' ? 'status-present' : 'status-left'}">${r.status}</span></td>
-                        </tr>
-                    `).join('');
+                    <tr>
+                        <td><strong>${r.username}</strong></td>
+                        <td>${r.loginTime}</td>
+                        <td>${r.logoutTime || '---'}</td>
+                        <td>${r.duration || '---'}</td>
+                        <td><span class="status-badge ${r.status === 'حاضر' ? 'status-present' : 'status-left'}">${r.status}</span></td>
+                    </tr>
+                `).join('');
         }
 
         function renderPriceTable() {
             const tbody = document.getElementById('priceBody');
             if (!tbody) return;
-
             if (priceList.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">لا توجد سلع مسجلة</td></tr>';
                 return;
             }
-
             const categoryColors = {
                 'مطبعة': 'category-print',
                 'استنساخ': 'category-print',
@@ -1217,43 +1513,44 @@
                 'ملابس': 'category-clothes',
                 'فايلات': 'category-print'
             };
-
             tbody.innerHTML = priceList.map((item, index) => `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td><strong>${item.name}</strong></td>
-                        <td>${item.price.toFixed(0)} د.ع</td>
-                        <td><span class="category-tag ${categoryColors[item.category] || 'category-print'}">${item.category}</span></td>
-                        <td>
-                            <button class="action-btn edit" onclick="editItem(${index})">✏️</button>
-                            <button class="action-btn delete" onclick="deleteItem(${index})">🗑️</button>
-                        </td>
-                    </tr>
-                `).join('');
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${item.name}</strong></td>
+                    <td>${item.price.toFixed(0)} د.ع</td>
+                    <td><span class="category-tag ${categoryColors[item.category] || 'category-print'}">${item.category}</span></td>
+                    <td>
+                        <button class="action-btn edit" onclick="editItem(${index})">✏️</button>
+                        <button class="action-btn delete" onclick="deleteItem(${index})">🗑️</button>
+                    </td>
+                </tr>
+            `).join('');
         }
 
         function renderSalesTable() {
             const tbody = document.getElementById('salesBody');
             if (!tbody) return;
-
             if (salesLog.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;">لا توجد مبيعات مسجلة</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#999;">لا توجد مبيعات مسجلة</td></tr>';
                 return;
             }
-
             tbody.innerHTML = salesLog
                 .sort((a, b) => b.timestamp - a.timestamp)
                 .map((sale, index) => `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${sale.itemName}</td>
-                            <td>${sale.quantity}</td>
-                            <td><strong>${sale.total.toFixed(0)} د.ع</strong></td>
-                            <td>${sale.buyer}</td>
-                            <td>${sale.date}</td>
-                            <td>${sale.employee}</td>
-                        </tr>
-                    `).join('');
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${sale.itemName}</td>
+                        <td>${sale.quantity}</td>
+                        <td><strong>${sale.total.toFixed(0)} د.ع</strong></td>
+                        <td>${sale.buyer}</td>
+                        <td>${sale.date}</td>
+                        <td>${sale.employee}</td>
+                        <td>
+                            <button class="action-btn edit" onclick="editSale(${sale.id})">✏️</button>
+                            <button class="action-btn delete" onclick="deleteSale(${sale.id})">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
         }
 
         // ================================================================
@@ -1286,18 +1583,15 @@
         // ================================================================
 
         function initCharts() {
-            // 1. مخطط المبيعات - أعلى 5 سلع مبيعاً
+            // 1. مخطط المبيعات
             const salesCtx = document.getElementById('salesChart');
             if (salesCtx) {
                 if (salesChartInstance) salesChartInstance.destroy();
-
-                // حساب المبيعات لكل سلعة
                 const itemSales = {};
                 salesLog.forEach(sale => {
                     if (!itemSales[sale.itemName]) itemSales[sale.itemName] = 0;
                     itemSales[sale.itemName] += sale.total;
                 });
-
                 const sorted = Object.entries(itemSales).sort((a, b) => b[1] - a[1]);
                 const top5 = sorted.slice(0, 5);
                 const labels = top5.map(d => d[0].length > 15 ? d[0].substring(0, 15) + '...' : d[0]);
@@ -1306,14 +1600,8 @@
                 if (labels.length === 0) {
                     salesChartInstance = new Chart(salesCtx, {
                         type: 'bar',
-                        data: {
-                            labels: ['لا توجد مبيعات'],
-                            datasets: [{
-                                label: 'المبيعات (د.ع)',
-                                data: [0],
-                                backgroundColor: ['#ccc']
-                            }]
-                        },
+                        data: { labels: ['لا توجد مبيعات'], datasets: [{ label: 'المبيعات (د.ع)', data: [0],
+                                backgroundColor: ['#ccc'] }] },
                         options: { responsive: true, maintainAspectRatio: true }
                     });
                 } else {
@@ -1328,27 +1616,19 @@
                                 borderRadius: 8
                             }]
                         },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: true,
-                            plugins: {
-                                legend: { display: false }
-                            }
-                        }
+                        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
                     });
                 }
             }
 
-            // 2. مخطط الحضور - هذا الأسبوع
+            // 2. مخطط الحضور
             const attendanceCtx = document.getElementById('attendanceChart');
             if (attendanceCtx) {
                 if (attendanceChartInstance) attendanceChartInstance.destroy();
-
                 const weekDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
                 const now = new Date();
                 const weekStart = new Date(now);
                 weekStart.setDate(now.getDate() - now.getDay());
-
                 const attendanceCount = weekDays.map((day, i) => {
                     const date = new Date(weekStart);
                     date.setDate(date.getDate() + i);
@@ -1358,7 +1638,6 @@
                         r.status === 'حاضر'
                     ).length;
                 });
-
                 attendanceChartInstance = new Chart(attendanceCtx, {
                     type: 'line',
                     data: {
@@ -1374,28 +1653,20 @@
                             pointRadius: 5
                         }]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        plugins: {
-                            legend: { display: false }
-                        }
-                    }
+                    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
                 });
             }
 
-            // 3. مخطط توزيع الإيرادات حسب القسم
+            // 3. مخطط توزيع الإيرادات
             const revenueCtx = document.getElementById('revenueChart');
             if (revenueCtx) {
                 if (revenueChartInstance) revenueChartInstance.destroy();
-
                 const categoryRevenue = {};
                 salesLog.forEach(sale => {
                     const cat = sale.itemCategory || 'أخرى';
                     if (!categoryRevenue[cat]) categoryRevenue[cat] = 0;
                     categoryRevenue[cat] += sale.total;
                 });
-
                 const labels = Object.keys(categoryRevenue);
                 const data = Object.values(categoryRevenue);
                 const colors = ['#1a3a5c', '#c9a84c', '#27ae60', '#e74c3c', '#3498db', '#9b59b6', '#f39c12', '#1abc9c'];
@@ -1403,13 +1674,7 @@
                 if (labels.length === 0) {
                     revenueChartInstance = new Chart(revenueCtx, {
                         type: 'doughnut',
-                        data: {
-                            labels: ['لا توجد مبيعات'],
-                            datasets: [{
-                                data: [1],
-                                backgroundColor: ['#ccc']
-                            }]
-                        },
+                        data: { labels: ['لا توجد مبيعات'], datasets: [{ data: [1], backgroundColor: ['#ccc'] }] },
                         options: { responsive: true, maintainAspectRatio: true }
                     });
                 } else {
@@ -1427,32 +1692,27 @@
                         options: {
                             responsive: true,
                             maintainAspectRatio: true,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: { font: { size: 11 } }
-                                }
-                            }
+                            plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }
                         }
                     });
                 }
             }
 
-            // 4. مخطط عدد السلع حسب التصنيف
+            // 4. مخطط السلع حسب التصنيف
             const categoryCtx = document.getElementById('categoryChart');
             if (categoryCtx) {
                 if (categoryChartInstance) categoryChartInstance.destroy();
-
                 const categoryCount = {};
                 priceList.forEach(item => {
                     const cat = item.category || 'أخرى';
                     if (!categoryCount[cat]) categoryCount[cat] = 0;
                     categoryCount[cat]++;
                 });
-
                 const labels = Object.keys(categoryCount);
                 const data = Object.values(categoryCount);
-                const colors = ['#1a3a5c', '#c9a84c', '#27ae60', '#e74c3c', '#3498db', '#9b59b6', '#f39c12', '#1abc9c', '#e67e22'];
+                const colors = ['#1a3a5c', '#c9a84c', '#27ae60', '#e74c3c', '#3498db', '#9b59b6', '#f39c12', '#1abc9c',
+                    '#e67e22'
+                ];
 
                 categoryChartInstance = new Chart(categoryCtx, {
                     type: 'pie',
@@ -1468,12 +1728,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: true,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: { font: { size: 11 } }
-                            }
-                        }
+                        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }
                     }
                 });
             }
@@ -1499,12 +1754,84 @@
         }
 
         // ================================================================
-        // ====== وظائف الطباعة ======
+        // ====== وظائف إنشاء PDF ======
         // ================================================================
 
-        function printAttendanceReport(filter = 'all') {
+        function generatePDF(elementId, filename, title) {
+            const element = document.getElementById(elementId);
+            if (!element) {
+                showNotification('حدث خطأ في إنشاء PDF', 'error');
+                return;
+            }
+
+            // إنشاء نسخة للطباعة
+            const printContent = element.cloneNode(true);
+
+            // إزالة أزرار الإجراءات من الجداول
+            const actionButtons = printContent.querySelectorAll('.action-btn');
+            actionButtons.forEach(btn => btn.remove());
+
+            // إزالة أعمدة الإجراءات من الجداول
+            const tables = printContent.querySelectorAll('table');
+            tables.forEach(table => {
+                const headers = table.querySelectorAll('th');
+                const lastHeader = headers[headers.length - 1];
+                if (lastHeader && lastHeader.textContent.trim() === 'الإجراءات') {
+                    lastHeader.remove();
+                }
+                const rows = table.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const lastCell = cells[cells.length - 1];
+                    if (lastCell && lastCell.textContent.trim() === '' || lastCell && lastCell
+                    .querySelectorAll('.action-btn').length > 0) {
+                        lastCell.remove();
+                    }
+                });
+            });
+
+            // إضافة تذييل
+            const footer = document.createElement('div');
+            footer.style.cssText = 'text-align:center;color:#999;font-size:0.85rem;margin-top:2rem;padding-top:1rem;border-top:1px solid #ddd;';
+            footer.textContent = `تم إنشاء التقرير بواسطة نظام مكتبة المهداوي - ${new Date().toLocaleString('ar-EG')}`;
+            printContent.appendChild(footer);
+
+            // إنشاء نافذة PDF
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `${filename}_${new Date().toISOString().slice(0,10)}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true,
+                    scrollY: 0,
+                    windowHeight: printContent.scrollHeight
+                },
+                jsPDF: {
+                    unit: 'mm',
+                    format: 'a4',
+                    orientation: 'portrait'
+                },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            showNotification('⏳ جاري إنشاء ملف PDF...', 'info');
+
+            html2pdf().set(opt).from(printContent).save()
+                .then(() => {
+                    showNotification('✅ تم حفظ ملف PDF بنجاح');
+                })
+                .catch(err => {
+                    console.error(err);
+                    showNotification('❌ حدث خطأ في إنشاء PDF', 'error');
+                });
+        }
+
+        // ====== PDF حضور ======
+        function generateAttendancePDF(filter = 'all') {
             if (attendanceLog.length === 0) {
-                showNotification('لا يوجد سجل حضور للطباعة', 'error');
+                showNotification('لا يوجد سجل حضور', 'error');
                 return;
             }
 
@@ -1525,124 +1852,162 @@
                 return;
             }
 
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                    <html dir="rtl">
-                    <head>
-                        <title>تقرير الحضور - مكتبة المهداوي</title>
-                        <style>
-                            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 2rem; }
-                            h1 { color: #1a3a5c; text-align: center; border-bottom: 3px solid #c9a84c; padding-bottom: 1rem; }
-                            .sub { text-align: center; color: #666; margin-bottom: 2rem; }
-                            table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
-                            th { background: #1a3a5c; color: white; padding: 0.8rem; text-align: right; }
-                            td { padding: 0.6rem 0.8rem; border-bottom: 1px solid #ddd; }
-                            .present { color: green; font-weight: bold; }
-                            .left { color: red; font-weight: bold; }
-                            .footer { margin-top: 2rem; text-align: center; color: #999; font-size: 0.85rem; border-top: 1px solid #ddd; padding-top: 1rem; }
-                        </style>
-                    </head>
-                    <body>
-                        <h1>📊 تقرير حضور الموظفين</h1>
-                        <p class="sub">
-                            الفترة: ${filter === 'all' ? 'جميع الأيام' : filter === 'weekly' ? 'هذا الأسبوع' : 'هذا الشهر'} | 
-                            التاريخ: ${now.toLocaleDateString('ar-EG')}
-                        </p>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>الموظف</th>
-                                    <th>توقيت الدخول</th>
-                                    <th>توقيت الخروج</th>
-                                    <th>المدة</th>
-                                    <th>الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${filteredLog.map(r => `
-                                    <tr>
-                                        <td><strong>${r.username}</strong></td>
-                                        <td>${r.loginTime}</td>
-                                        <td>${r.logoutTime || '---'}</td>
-                                        <td>${r.duration || '---'}</td>
-                                        <td class="${r.status === 'حاضر' ? 'present' : 'left'}">${r.status}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                        <div class="footer">
-                            تم الطباعة بواسطة نظام مكتبة المهداوي - ${now.toLocaleString('ar-EG')}
-                        </div>
-                    </body>
-                    </html>
-                `);
-            printWindow.document.close();
-            setTimeout(() => { printWindow.print();
-                printWindow.close(); }, 500);
+            // إنشاء عنصر مؤقت للـ PDF
+            const container = document.createElement('div');
+            container.style.cssText = 'padding:2rem;font-family:Segoe UI,Arial,sans-serif;';
+
+            const title = document.createElement('h1');
+            title.style.cssText = 'color:#1a3a5c;text-align:center;border-bottom:3px solid #c9a84c;padding-bottom:1rem;';
+            title.textContent = '📊 تقرير حضور الموظفين';
+
+            const sub = document.createElement('p');
+            sub.style.cssText = 'text-align:center;color:#666;margin-bottom:2rem;';
+            sub.textContent =
+                `الفترة: ${filter === 'all' ? 'جميع الأيام' : filter === 'weekly' ? 'هذا الأسبوع' : 'هذا الشهر'} | التاريخ: ${now.toLocaleDateString('ar-EG')}`;
+
+            const table = document.createElement('table');
+            table.style.cssText = 'width:100%;border-collapse:collapse;margin-top:1rem;';
+            table.innerHTML = `
+                <thead style="background:#1a3a5c;color:white;">
+                    <tr>
+                        <th style="padding:0.8rem;text-align:right;">الموظف</th>
+                        <th style="padding:0.8rem;text-align:right;">توقيت الدخول</th>
+                        <th style="padding:0.8rem;text-align:right;">توقيت الخروج</th>
+                        <th style="padding:0.8rem;text-align:right;">المدة</th>
+                        <th style="padding:0.8rem;text-align:right;">الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${filteredLog.map(r => `
+                        <tr>
+                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;"><strong>${r.username}</strong></td>
+                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${r.loginTime}</td>
+                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${r.logoutTime || '---'}</td>
+                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${r.duration || '---'}</td>
+                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;color:${r.status === 'حاضر' ? 'green' : 'red'};font-weight:bold;">${r.status}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+
+            container.appendChild(title);
+            container.appendChild(sub);
+            container.appendChild(table);
+
+            const footer = document.createElement('div');
+            footer.style.cssText =
+                'text-align:center;color:#999;font-size:0.85rem;margin-top:2rem;padding-top:1rem;border-top:1px solid #ddd;';
+            footer.textContent = `تم إنشاء التقرير بواسطة نظام مكتبة المهداوي - ${now.toLocaleString('ar-EG')}`;
+            container.appendChild(footer);
+
+            document.body.appendChild(container);
+
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `تقرير_الحضور_${new Date().toISOString().slice(0,10)}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            showNotification('⏳ جاري إنشاء PDF الحضور...', 'info');
+
+            html2pdf().set(opt).from(container).save()
+                .then(() => {
+                    document.body.removeChild(container);
+                    showNotification('✅ تم حفظ PDF الحضور بنجاح');
+                })
+                .catch(err => {
+                    document.body.removeChild(container);
+                    console.error(err);
+                    showNotification('❌ حدث خطأ في إنشاء PDF', 'error');
+                });
         }
 
-        function printPriceList() {
+        // ====== PDF قائمة الأسعار ======
+        function generatePricePDF() {
             if (priceList.length === 0) {
                 showNotification('لا توجد سلع للطباعة', 'error');
                 return;
             }
 
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                    <html dir="rtl">
-                    <head>
-                        <title>قائمة الأسعار - مكتبة المهداوي</title>
-                        <style>
-                            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 2rem; }
-                            h1 { color: #1a3a5c; text-align: center; border-bottom: 3px solid #c9a84c; padding-bottom: 1rem; }
-                            table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
-                            th { background: #1a3a5c; color: white; padding: 0.8rem; text-align: right; }
-                            td { padding: 0.6rem 0.8rem; border-bottom: 1px solid #ddd; }
-                            .total { font-weight: bold; color: #1a3a5c; }
-                            .footer { margin-top: 2rem; text-align: center; color: #999; font-size: 0.85rem; border-top: 1px solid #ddd; padding-top: 1rem; }
-                            .cat-tag { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 10px; font-size: 0.8rem; background: #e3f2fd; color: #0d47a1; }
-                        </style>
-                    </head>
-                    <body>
-                        <h1>💰 قائمة الأسعار الكاملة</h1>
-                        <p style="text-align:center;color:#666;">مكتبة المهداوي - ${new Date().toLocaleDateString('ar-EG')}</p>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>السلعة</th>
-                                    <th>السعر (د.ع)</th>
-                                    <th>التصنيف</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${priceList.map((item, i) => `
-                                    <tr>
-                                        <td>${i + 1}</td>
-                                        <td>${item.name}</td>
-                                        <td>${item.price.toFixed(0)}</td>
-                                        <td><span class="cat-tag">${item.category}</span></td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="4" class="total" style="text-align:left;">
-                                        إجمالي السلع: ${priceList.length}
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                        <div class="footer">تم الطباعة بواسطة نظام مكتبة المهداوي</div>
-                    </body>
-                    </html>
-                `);
-            printWindow.document.close();
-            setTimeout(() => { printWindow.print();
-                printWindow.close(); }, 500);
+            const container = document.createElement('div');
+            container.style.cssText = 'padding:2rem;font-family:Segoe UI,Arial,sans-serif;';
+
+            const title = document.createElement('h1');
+            title.style.cssText = 'color:#1a3a5c;text-align:center;border-bottom:3px solid #c9a84c;padding-bottom:1rem;';
+            title.textContent = '💰 قائمة الأسعار الكاملة';
+
+            const sub = document.createElement('p');
+            sub.style.cssText = 'text-align:center;color:#666;margin-bottom:2rem;';
+            sub.textContent = `مكتبة المهداوي - ${new Date().toLocaleDateString('ar-EG')}`;
+
+            const table = document.createElement('table');
+            table.style.cssText = 'width:100%;border-collapse:collapse;margin-top:1rem;';
+            table.innerHTML = `
+                <thead style="background:#1a3a5c;color:white;">
+                    <tr>
+                        <th style="padding:0.8rem;text-align:right;">#</th>
+                        <th style="padding:0.8rem;text-align:right;">السلعة</th>
+                        <th style="padding:0.8rem;text-align:right;">السعر (د.ع)</th>
+                        <th style="padding:0.8rem;text-align:right;">التصنيف</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${priceList.map((item, i) => `
+                        <tr>
+                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${i + 1}</td>
+                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${item.name}</td>
+                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${item.price.toFixed(0)}</td>
+                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${item.category}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" style="padding:0.8rem;font-weight:bold;color:#1a3a5c;text-align:left;">
+                            إجمالي السلع: ${priceList.length}
+                        </td>
+                    </tr>
+                </tfoot>
+            `;
+
+            container.appendChild(title);
+            container.appendChild(sub);
+            container.appendChild(table);
+
+            const footer = document.createElement('div');
+            footer.style.cssText =
+                'text-align:center;color:#999;font-size:0.85rem;margin-top:2rem;padding-top:1rem;border-top:1px solid #ddd;';
+            footer.textContent = `تم إنشاء التقرير بواسطة نظام مكتبة المهداوي - ${new Date().toLocaleString('ar-EG')}`;
+            container.appendChild(footer);
+
+            document.body.appendChild(container);
+
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `قائمة_الأسعار_${new Date().toISOString().slice(0,10)}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            showNotification('⏳ جاري إنشاء PDF الأسعار...', 'info');
+
+            html2pdf().set(opt).from(container).save()
+                .then(() => {
+                    document.body.removeChild(container);
+                    showNotification('✅ تم حفظ PDF الأسعار بنجاح');
+                })
+                .catch(err => {
+                    document.body.removeChild(container);
+                    console.error(err);
+                    showNotification('❌ حدث خطأ في إنشاء PDF', 'error');
+                });
         }
 
-        function printSalesReport() {
+        // ====== PDF المبيعات ======
+        function generateSalesPDF() {
             if (salesLog.length === 0) {
                 showNotification('لا توجد مبيعات للطباعة', 'error');
                 return;
@@ -1650,69 +2015,91 @@
 
             const total = salesLog.reduce((sum, s) => sum + s.total, 0);
 
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                    <html dir="rtl">
-                    <head>
-                        <title>تقرير المبيعات - مكتبة المهداوي</title>
-                        <style>
-                            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 2rem; }
-                            h1 { color: #1a3a5c; text-align: center; border-bottom: 3px solid #c9a84c; padding-bottom: 1rem; }
-                            table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
-                            th { background: #1a3a5c; color: white; padding: 0.8rem; text-align: right; }
-                            td { padding: 0.6rem 0.8rem; border-bottom: 1px solid #ddd; }
-                            .total { font-weight: bold; color: #1a3a5c; }
-                            .footer { margin-top: 2rem; text-align: center; color: #999; font-size: 0.85rem; border-top: 1px solid #ddd; padding-top: 1rem; }
-                        </style>
-                    </head>
-                    <body>
-                        <h1>🛒 تقرير المبيعات</h1>
-                        <p style="text-align:center;color:#666;">مكتبة المهداوي - ${new Date().toLocaleDateString('ar-EG')}</p>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>السلعة</th>
-                                    <th>الكمية</th>
-                                    <th>سعر الوحدة</th>
-                                    <th>الإجمالي</th>
-                                    <th>المشتري</th>
-                                    <th>الموظف</th>
-                                    <th>التاريخ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${salesLog.sort((a,b) => b.timestamp - a.timestamp).map((s, i) => `
-                                    <tr>
-                                        <td>${i + 1}</td>
-                                        <td>${s.itemName}</td>
-                                        <td>${s.quantity}</td>
-                                        <td>${s.unitPrice.toFixed(0)} د.ع</td>
-                                        <td><strong>${s.total.toFixed(0)} د.ع</strong></td>
-                                        <td>${s.buyer}</td>
-                                        <td>${s.employee}</td>
-                                        <td>${s.date}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="8" class="total" style="text-align:left;">
-                                        الإجمالي الكلي: ${total.toFixed(0)} د.ع
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                        <div class="footer">تم الطباعة بواسطة نظام مكتبة المهداوي</div>
-                    </body>
-                    </html>
-                `);
-            printWindow.document.close();
-            setTimeout(() => { printWindow.print();
-                printWindow.close(); }, 500);
+            const container = document.createElement('div');
+            container.style.cssText = 'padding:2rem;font-family:Segoe UI,Arial,sans-serif;';
+
+            const title = document.createElement('h1');
+            title.style.cssText = 'color:#1a3a5c;text-align:center;border-bottom:3px solid #c9a84c;padding-bottom:1rem;';
+            title.textContent = '🛒 تقرير المبيعات';
+
+            const sub = document.createElement('p');
+            sub.style.cssText = 'text-align:center;color:#666;margin-bottom:2rem;';
+            sub.textContent = `مكتبة المهداوي - ${new Date().toLocaleDateString('ar-EG')}`;
+
+            const table = document.createElement('table');
+            table.style.cssText = 'width:100%;border-collapse:collapse;margin-top:1rem;font-size:0.9rem;';
+            table.innerHTML = `
+                <thead style="background:#1a3a5c;color:white;">
+                    <tr>
+                        <th style="padding:0.6rem;text-align:right;">#</th>
+                        <th style="padding:0.6rem;text-align:right;">السلعة</th>
+                        <th style="padding:0.6rem;text-align:right;">الكمية</th>
+                        <th style="padding:0.6rem;text-align:right;">سعر الوحدة</th>
+                        <th style="padding:0.6rem;text-align:right;">الإجمالي</th>
+                        <th style="padding:0.6rem;text-align:right;">المشتري</th>
+                        <th style="padding:0.6rem;text-align:right;">الموظف</th>
+                        <th style="padding:0.6rem;text-align:right;">التاريخ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${salesLog.sort((a,b) => b.timestamp - a.timestamp).map((s, i) => `
+                        <tr>
+                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${i + 1}</td>
+                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.itemName}</td>
+                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.quantity}</td>
+                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.unitPrice.toFixed(0)}</td>
+                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;font-weight:bold;">${s.total.toFixed(0)}</td>
+                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.buyer}</td>
+                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.employee}</td>
+                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.date}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="8" style="padding:0.8rem;font-weight:bold;color:#1a3a5c;text-align:left;">
+                            الإجمالي الكلي: ${total.toFixed(0)} د.ع
+                        </td>
+                    </tr>
+                </tfoot>
+            `;
+
+            container.appendChild(title);
+            container.appendChild(sub);
+            container.appendChild(table);
+
+            const footer = document.createElement('div');
+            footer.style.cssText =
+                'text-align:center;color:#999;font-size:0.85rem;margin-top:2rem;padding-top:1rem;border-top:1px solid #ddd;';
+            footer.textContent = `تم إنشاء التقرير بواسطة نظام مكتبة المهداوي - ${new Date().toLocaleString('ar-EG')}`;
+            container.appendChild(footer);
+
+            document.body.appendChild(container);
+
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `تقرير_المبيعات_${new Date().toISOString().slice(0,10)}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            showNotification('⏳ جاري إنشاء PDF المبيعات...', 'info');
+
+            html2pdf().set(opt).from(container).save()
+                .then(() => {
+                    document.body.removeChild(container);
+                    showNotification('✅ تم حفظ PDF المبيعات بنجاح');
+                })
+                .catch(err => {
+                    document.body.removeChild(container);
+                    console.error(err);
+                    showNotification('❌ حدث خطأ في إنشاء PDF', 'error');
+                });
         }
 
-        function printUsefulMaterials() {
+        // ====== PDF المواد المفيدة ======
+        function generateMaterialsPDF() {
             const materials = [
                 { name: '📖 الموسوعة الشاملة', category: 'مرجع', quantity: 5 },
                 { name: '📚 القاموس العربي - المورد', category: 'لغة', quantity: 3 },
@@ -1724,53 +2111,80 @@
                 { name: '📖 الموسوعة الطبية', category: 'طبي', quantity: 2 }
             ];
 
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                    <html dir="rtl">
-                    <head>
-                        <title>المواد المفيدة - مكتبة المهداوي</title>
-                        <style>
-                            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 2rem; }
-                            h1 { color: #c9a84c; text-align: center; border-bottom: 3px solid #1a3a5c; padding-bottom: 1rem; }
-                            .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2rem; }
-                            .card { border: 1px solid #ddd; border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-                            .card h3 { color: #1a3a5c; margin-bottom: 0.5rem; }
-                            .badge { background: #c9a84c; color: white; padding: 0.3rem 1rem; border-radius: 20px; display: inline-block; font-size: 0.85rem; }
-                            .footer { margin-top: 2rem; text-align: center; color: #999; font-size: 0.85rem; border-top: 1px solid #ddd; padding-top: 1rem; }
-                            @media print { .grid { grid-template-columns: repeat(3, 1fr); } }
-                        </style>
-                    </head>
-                    <body>
-                        <h1>📚 المواد المفيدة في المكتبة</h1>
-                        <p style="text-align:center;color:#666;">مكتبة المهداوي - ${new Date().toLocaleDateString('ar-EG')}</p>
-                        <div class="grid">
-                            ${materials.map(m => `
-                                <div class="card">
-                                    <h3>${m.name}</h3>
-                                    <p><span class="badge">${m.category}</span></p>
-                                    <p>الكمية: <strong>${m.quantity}</strong></p>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div class="footer">تم الطباعة بواسطة نظام مكتبة المهداوي</div>
-                    </body>
-                    </html>
-                `);
-            printWindow.document.close();
-            setTimeout(() => { printWindow.print();
-                printWindow.close(); }, 500);
+            const container = document.createElement('div');
+            container.style.cssText = 'padding:2rem;font-family:Segoe UI,Arial,sans-serif;';
+
+            const title = document.createElement('h1');
+            title.style.cssText = 'color:#c9a84c;text-align:center;border-bottom:3px solid #1a3a5c;padding-bottom:1rem;';
+            title.textContent = '📚 المواد المفيدة في المكتبة';
+
+            const sub = document.createElement('p');
+            sub.style.cssText = 'text-align:center;color:#666;margin-bottom:2rem;';
+            sub.textContent = `مكتبة المهداوي - ${new Date().toLocaleDateString('ar-EG')}`;
+
+            const grid = document.createElement('div');
+            grid.style.cssText =
+                'display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:2rem;';
+
+            materials.forEach(m => {
+                const card = document.createElement('div');
+                card.style.cssText =
+                    'border:1px solid #ddd;border-radius:12px;padding:1.5rem;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
+                card.innerHTML = `
+                    <h3 style="color:#1a3a5c;margin-bottom:0.5rem;">${m.name}</h3>
+                    <p><span style="background:#c9a84c;color:white;padding:0.3rem 1rem;border-radius:20px;display:inline-block;font-size:0.85rem;">${m.category}</span></p>
+                    <p>الكمية: <strong>${m.quantity}</strong></p>
+                `;
+                grid.appendChild(card);
+            });
+
+            container.appendChild(title);
+            container.appendChild(sub);
+            container.appendChild(grid);
+
+            const footer = document.createElement('div');
+            footer.style.cssText =
+                'text-align:center;color:#999;font-size:0.85rem;margin-top:2rem;padding-top:1rem;border-top:1px solid #ddd;';
+            footer.textContent = `تم إنشاء التقرير بواسطة نظام مكتبة المهداوي - ${new Date().toLocaleString('ar-EG')}`;
+            container.appendChild(footer);
+
+            document.body.appendChild(container);
+
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `المواد_المفيدة_${new Date().toISOString().slice(0,10)}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            showNotification('⏳ جاري إنشاء PDF المواد المفيدة...', 'info');
+
+            html2pdf().set(opt).from(container).save()
+                .then(() => {
+                    document.body.removeChild(container);
+                    showNotification('✅ تم حفظ PDF المواد المفيدة بنجاح');
+                })
+                .catch(err => {
+                    document.body.removeChild(container);
+                    console.error(err);
+                    showNotification('❌ حدث خطأ في إنشاء PDF', 'error');
+                });
         }
 
         // ================================================================
         // ====== التهيئة ======
         // ================================================================
 
-        // إغلاق المودال عند الضغط خارجها
+        // إغلاق المودالات عند الضغط خارجها
         document.getElementById('loginModal').addEventListener('click', function(e) {
             if (e.target === this) closeLoginModal();
         });
         document.getElementById('saleModal').addEventListener('click', function(e) {
             if (e.target === this) closeSaleModal();
+        });
+        document.getElementById('editSaleModal').addEventListener('click', function(e) {
+            if (e.target === this) closeEditSaleModal();
         });
 
         // تسجيل الدخول بالضغط على Enter
@@ -1783,9 +2197,7 @@
 
         // إضافة السلع الافتراضية تلقائياً إذا كانت القائمة فارغة
         if (priceList.length === 0) {
-            setTimeout(() => {
-                addDefaultItems();
-            }, 500);
+            setTimeout(addDefaultItems, 300);
         }
 
         // تحديث الواجهة عند التحميل
@@ -1796,7 +2208,7 @@
         console.log('📦 السلع المسجلة:', priceList.length);
         console.log('📋 سجل الحضور:', attendanceLog.length);
         console.log('🛒 سجل المبيعات:', salesLog.length);
-        console.log('📊 تم تحميل المخططات البيانية بنجاح!');
+        console.log('📄 تم تفعيل خاصية حفظ PDF');
     </script>
 
 </body>
