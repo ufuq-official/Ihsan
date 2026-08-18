@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -89,6 +88,8 @@
             flex-direction: column;
             gap: 5px;
             transition: var(--transition);
+            position: relative;
+            z-index: 1001;
         }
 
         .hamburger:hover {
@@ -103,6 +104,7 @@
             background: white;
             border-radius: 3px;
             transition: var(--transition);
+            transform-origin: center;
         }
 
         .hamburger.active span:nth-child(1) {
@@ -110,6 +112,7 @@
         }
         .hamburger.active span:nth-child(2) {
             opacity: 0;
+            transform: scaleX(0);
         }
         .hamburger.active span:nth-child(3) {
             transform: rotate(-45deg) translate(6px, -6px);
@@ -124,7 +127,7 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
-            z-index: 999;
+            z-index: 998;
             display: none;
             opacity: 0;
             transition: opacity 0.3s ease;
@@ -138,12 +141,12 @@
         .sidebar {
             position: fixed;
             top: 0;
-            right: -var(--sidebar-width);
+            right: calc(var(--sidebar-width) * -1);
             width: var(--sidebar-width);
             height: 100%;
             background: white;
             box-shadow: -5px 0 30px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
+            z-index: 999;
             transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             padding: 2rem 1.5rem;
             overflow-y: auto;
@@ -176,6 +179,7 @@
             cursor: pointer;
             color: #999;
             transition: var(--transition);
+            padding: 0.5rem;
         }
 
         .sidebar-close:hover {
@@ -684,22 +688,6 @@
             }
         }
 
-        @media print {
-            header,
-            .sidebar,
-            .sidebar-overlay,
-            .no-print {
-                display: none !important;
-            }
-            .card {
-                box-shadow: none !important;
-                border: 1px solid #ddd !important;
-            }
-            .charts-grid {
-                break-inside: avoid;
-            }
-        }
-
         /* ====== شريط التبويب ====== */
         .tab-content {
             display: none;
@@ -716,9 +704,9 @@
             margin-bottom: 1.5rem;
         }
 
-        /* ====== عناصر مخفية للـ PDF ====== */
-        .pdf-hidden {
-            display: none !important;
+        /* ====== منع التمرير خلف القائمة ====== */
+        body.no-scroll {
+            overflow: hidden;
         }
     </style>
 </head>
@@ -733,7 +721,7 @@
             <div id="clockDisplay" style="color:white;font-weight:500;background:rgba(255,255,255,0.1);padding:0.5rem 1rem;border-radius:10px;font-size:0.9rem;">
                 <!-- الساعة -->
             </div>
-            <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()">
+            <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar(event)">
                 <span></span>
                 <span></span>
                 <span></span>
@@ -1103,35 +1091,43 @@
         }
 
         // ================================================================
-        // ====== القائمة الجانبية ======
+        // ====== القائمة الجانبية (تم الإصلاح) ======
         // ================================================================
 
-        function toggleSidebar() {
+        function toggleSidebar(event) {
+            if (event) event.stopPropagation();
+
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
             const hamburger = document.getElementById('hamburgerBtn');
             const isOpen = sidebar.classList.contains('open');
 
             if (isOpen) {
-                sidebar.classList.remove('open');
-                overlay.classList.remove('active');
-                hamburger.classList.remove('active');
+                closeSidebar();
             } else {
                 sidebar.classList.add('open');
                 overlay.classList.add('active');
                 hamburger.classList.add('active');
+                document.body.classList.add('no-scroll');
             }
         }
 
         function closeSidebar() {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('sidebarOverlay').classList.remove('active');
-            document.getElementById('hamburgerBtn').classList.remove('active');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const hamburger = document.getElementById('hamburgerBtn');
+
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            hamburger.classList.remove('active');
+            document.body.classList.remove('no-scroll');
         }
 
         function showSection(section) {
+            // إخفاء جميع الأقسام
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
 
+            // إظهار القسم المطلوب
             if (section === 'attendance') {
                 document.getElementById('attendanceSection').classList.add('active');
             } else if (section === 'items') {
@@ -1140,7 +1136,10 @@
                 document.getElementById('salesSection').classList.add('active');
             }
 
+            // إغلاق القائمة الجانبية
             closeSidebar();
+
+            // التمرير إلى أعلى الصفحة
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -1485,14 +1484,14 @@
             tbody.innerHTML = attendanceLog
                 .sort((a, b) => b.loginTimestamp - a.loginTimestamp)
                 .map(r => `
-                    <tr>
-                        <td><strong>${r.username}</strong></td>
-                        <td>${r.loginTime}</td>
-                        <td>${r.logoutTime || '---'}</td>
-                        <td>${r.duration || '---'}</td>
-                        <td><span class="status-badge ${r.status === 'حاضر' ? 'status-present' : 'status-left'}">${r.status}</span></td>
-                    </tr>
-                `).join('');
+                        <tr>
+                            <td><strong>${r.username}</strong></td>
+                            <td>${r.loginTime}</td>
+                            <td>${r.logoutTime || '---'}</td>
+                            <td>${r.duration || '---'}</td>
+                            <td><span class="status-badge ${r.status === 'حاضر' ? 'status-present' : 'status-left'}">${r.status}</span></td>
+                        </tr>
+                    `).join('');
         }
 
         function renderPriceTable() {
@@ -1514,17 +1513,17 @@
                 'فايلات': 'category-print'
             };
             tbody.innerHTML = priceList.map((item, index) => `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td><strong>${item.name}</strong></td>
-                    <td>${item.price.toFixed(0)} د.ع</td>
-                    <td><span class="category-tag ${categoryColors[item.category] || 'category-print'}">${item.category}</span></td>
-                    <td>
-                        <button class="action-btn edit" onclick="editItem(${index})">✏️</button>
-                        <button class="action-btn delete" onclick="deleteItem(${index})">🗑️</button>
-                    </td>
-                </tr>
-            `).join('');
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><strong>${item.name}</strong></td>
+                        <td>${item.price.toFixed(0)} د.ع</td>
+                        <td><span class="category-tag ${categoryColors[item.category] || 'category-print'}">${item.category}</span></td>
+                        <td>
+                            <button class="action-btn edit" onclick="editItem(${index})">✏️</button>
+                            <button class="action-btn delete" onclick="deleteItem(${index})">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
         }
 
         function renderSalesTable() {
@@ -1537,20 +1536,20 @@
             tbody.innerHTML = salesLog
                 .sort((a, b) => b.timestamp - a.timestamp)
                 .map((sale, index) => `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${sale.itemName}</td>
-                        <td>${sale.quantity}</td>
-                        <td><strong>${sale.total.toFixed(0)} د.ع</strong></td>
-                        <td>${sale.buyer}</td>
-                        <td>${sale.date}</td>
-                        <td>${sale.employee}</td>
-                        <td>
-                            <button class="action-btn edit" onclick="editSale(${sale.id})">✏️</button>
-                            <button class="action-btn delete" onclick="deleteSale(${sale.id})">🗑️</button>
-                        </td>
-                    </tr>
-                `).join('');
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${sale.itemName}</td>
+                            <td>${sale.quantity}</td>
+                            <td><strong>${sale.total.toFixed(0)} د.ع</strong></td>
+                            <td>${sale.buyer}</td>
+                            <td>${sale.date}</td>
+                            <td>${sale.employee}</td>
+                            <td>
+                                <button class="action-btn edit" onclick="editSale(${sale.id})">✏️</button>
+                                <button class="action-btn delete" onclick="deleteSale(${sale.id})">🗑️</button>
+                            </td>
+                        </tr>
+                    `).join('');
         }
 
         // ================================================================
@@ -1754,25 +1753,28 @@
         }
 
         // ================================================================
-        // ====== وظائف إنشاء PDF ======
+        // ====== وظائف إنشاء PDF (مختصرة) ======
         // ================================================================
 
-        function generatePDF(elementId, filename, title) {
+        function generatePDF(elementId, filename, title, landscape = false) {
             const element = document.getElementById(elementId);
             if (!element) {
                 showNotification('حدث خطأ في إنشاء PDF', 'error');
                 return;
             }
 
-            // إنشاء نسخة للطباعة
-            const printContent = element.cloneNode(true);
+            const container = document.createElement('div');
+            container.style.cssText = 'padding:2rem;font-family:Segoe UI,Arial,sans-serif;';
 
-            // إزالة أزرار الإجراءات من الجداول
-            const actionButtons = printContent.querySelectorAll('.action-btn');
-            actionButtons.forEach(btn => btn.remove());
+            // نسخ المحتوى
+            const contentClone = element.cloneNode(true);
 
-            // إزالة أعمدة الإجراءات من الجداول
-            const tables = printContent.querySelectorAll('table');
+            // إزالة الأزرار
+            const actions = contentClone.querySelectorAll('.action-btn, .btn, .section-actions, .form-group');
+            actions.forEach(el => el.remove());
+
+            // إزالة أعمدة الإجراءات
+            const tables = contentClone.querySelectorAll('table');
             tables.forEach(table => {
                 const headers = table.querySelectorAll('th');
                 const lastHeader = headers[headers.length - 1];
@@ -1783,52 +1785,45 @@
                 rows.forEach(row => {
                     const cells = row.querySelectorAll('td');
                     const lastCell = cells[cells.length - 1];
-                    if (lastCell && lastCell.textContent.trim() === '' || lastCell && lastCell
-                    .querySelectorAll('.action-btn').length > 0) {
+                    if (lastCell && (lastCell.textContent.trim() === '' || lastCell.querySelector(
+                            '.action-btn'))) {
                         lastCell.remove();
                     }
                 });
             });
 
-            // إضافة تذييل
-            const footer = document.createElement('div');
-            footer.style.cssText = 'text-align:center;color:#999;font-size:0.85rem;margin-top:2rem;padding-top:1rem;border-top:1px solid #ddd;';
-            footer.textContent = `تم إنشاء التقرير بواسطة نظام مكتبة المهداوي - ${new Date().toLocaleString('ar-EG')}`;
-            printContent.appendChild(footer);
+            container.appendChild(contentClone);
 
-            // إنشاء نافذة PDF
+            const footer = document.createElement('div');
+            footer.style.cssText =
+                'text-align:center;color:#999;font-size:0.85rem;margin-top:2rem;padding-top:1rem;border-top:1px solid #ddd;';
+            footer.textContent = `تم إنشاء التقرير بواسطة نظام مكتبة المهداوي - ${new Date().toLocaleString('ar-EG')}`;
+            container.appendChild(footer);
+
+            document.body.appendChild(container);
+
             const opt = {
                 margin: [10, 10, 10, 10],
                 filename: `${filename}_${new Date().toISOString().slice(0,10)}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    letterRendering: true,
-                    scrollY: 0,
-                    windowHeight: printContent.scrollHeight
-                },
-                jsPDF: {
-                    unit: 'mm',
-                    format: 'a4',
-                    orientation: 'portrait'
-                },
-                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: landscape ? 'landscape' : 'portrait' }
             };
 
-            showNotification('⏳ جاري إنشاء ملف PDF...', 'info');
+            showNotification('⏳ جاري إنشاء PDF...', 'info');
 
-            html2pdf().set(opt).from(printContent).save()
+            html2pdf().set(opt).from(container).save()
                 .then(() => {
-                    showNotification('✅ تم حفظ ملف PDF بنجاح');
+                    document.body.removeChild(container);
+                    showNotification(`✅ تم حفظ ${title} بنجاح`);
                 })
                 .catch(err => {
+                    document.body.removeChild(container);
                     console.error(err);
                     showNotification('❌ حدث خطأ في إنشاء PDF', 'error');
                 });
         }
 
-        // ====== PDF حضور ======
         function generateAttendancePDF(filter = 'all') {
             if (attendanceLog.length === 0) {
                 showNotification('لا يوجد سجل حضور', 'error');
@@ -1852,7 +1847,6 @@
                 return;
             }
 
-            // إنشاء عنصر مؤقت للـ PDF
             const container = document.createElement('div');
             container.style.cssText = 'padding:2rem;font-family:Segoe UI,Arial,sans-serif;';
 
@@ -1868,27 +1862,27 @@
             const table = document.createElement('table');
             table.style.cssText = 'width:100%;border-collapse:collapse;margin-top:1rem;';
             table.innerHTML = `
-                <thead style="background:#1a3a5c;color:white;">
-                    <tr>
-                        <th style="padding:0.8rem;text-align:right;">الموظف</th>
-                        <th style="padding:0.8rem;text-align:right;">توقيت الدخول</th>
-                        <th style="padding:0.8rem;text-align:right;">توقيت الخروج</th>
-                        <th style="padding:0.8rem;text-align:right;">المدة</th>
-                        <th style="padding:0.8rem;text-align:right;">الحالة</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${filteredLog.map(r => `
+                    <thead style="background:#1a3a5c;color:white;">
                         <tr>
-                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;"><strong>${r.username}</strong></td>
-                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${r.loginTime}</td>
-                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${r.logoutTime || '---'}</td>
-                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${r.duration || '---'}</td>
-                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;color:${r.status === 'حاضر' ? 'green' : 'red'};font-weight:bold;">${r.status}</td>
+                            <th style="padding:0.8rem;text-align:right;">الموظف</th>
+                            <th style="padding:0.8rem;text-align:right;">توقيت الدخول</th>
+                            <th style="padding:0.8rem;text-align:right;">توقيت الخروج</th>
+                            <th style="padding:0.8rem;text-align:right;">المدة</th>
+                            <th style="padding:0.8rem;text-align:right;">الحالة</th>
                         </tr>
-                    `).join('')}
-                </tbody>
-            `;
+                    </thead>
+                    <tbody>
+                        ${filteredLog.map(r => `
+                            <tr>
+                                <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;"><strong>${r.username}</strong></td>
+                                <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${r.loginTime}</td>
+                                <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${r.logoutTime || '---'}</td>
+                                <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${r.duration || '---'}</td>
+                                <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;color:${r.status === 'حاضر' ? 'green' : 'red'};font-weight:bold;">${r.status}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
 
             container.appendChild(title);
             container.appendChild(sub);
@@ -1924,7 +1918,6 @@
                 });
         }
 
-        // ====== PDF قائمة الأسعار ======
         function generatePricePDF() {
             if (priceList.length === 0) {
                 showNotification('لا توجد سلع للطباعة', 'error');
@@ -1945,32 +1938,32 @@
             const table = document.createElement('table');
             table.style.cssText = 'width:100%;border-collapse:collapse;margin-top:1rem;';
             table.innerHTML = `
-                <thead style="background:#1a3a5c;color:white;">
-                    <tr>
-                        <th style="padding:0.8rem;text-align:right;">#</th>
-                        <th style="padding:0.8rem;text-align:right;">السلعة</th>
-                        <th style="padding:0.8rem;text-align:right;">السعر (د.ع)</th>
-                        <th style="padding:0.8rem;text-align:right;">التصنيف</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${priceList.map((item, i) => `
+                    <thead style="background:#1a3a5c;color:white;">
                         <tr>
-                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${i + 1}</td>
-                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${item.name}</td>
-                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${item.price.toFixed(0)}</td>
-                            <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${item.category}</td>
+                            <th style="padding:0.8rem;text-align:right;">#</th>
+                            <th style="padding:0.8rem;text-align:right;">السلعة</th>
+                            <th style="padding:0.8rem;text-align:right;">السعر (د.ع)</th>
+                            <th style="padding:0.8rem;text-align:right;">التصنيف</th>
                         </tr>
-                    `).join('')}
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="4" style="padding:0.8rem;font-weight:bold;color:#1a3a5c;text-align:left;">
-                            إجمالي السلع: ${priceList.length}
-                        </td>
-                    </tr>
-                </tfoot>
-            `;
+                    </thead>
+                    <tbody>
+                        ${priceList.map((item, i) => `
+                            <tr>
+                                <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${i + 1}</td>
+                                <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${item.name}</td>
+                                <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${item.price.toFixed(0)}</td>
+                                <td style="padding:0.6rem 0.8rem;border-bottom:1px solid #ddd;">${item.category}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" style="padding:0.8rem;font-weight:bold;color:#1a3a5c;text-align:left;">
+                                إجمالي السلع: ${priceList.length}
+                            </td>
+                        </tr>
+                    </tfoot>
+                `;
 
             container.appendChild(title);
             container.appendChild(sub);
@@ -2006,7 +1999,6 @@
                 });
         }
 
-        // ====== PDF المبيعات ======
         function generateSalesPDF() {
             if (salesLog.length === 0) {
                 showNotification('لا توجد مبيعات للطباعة', 'error');
@@ -2029,40 +2021,40 @@
             const table = document.createElement('table');
             table.style.cssText = 'width:100%;border-collapse:collapse;margin-top:1rem;font-size:0.9rem;';
             table.innerHTML = `
-                <thead style="background:#1a3a5c;color:white;">
-                    <tr>
-                        <th style="padding:0.6rem;text-align:right;">#</th>
-                        <th style="padding:0.6rem;text-align:right;">السلعة</th>
-                        <th style="padding:0.6rem;text-align:right;">الكمية</th>
-                        <th style="padding:0.6rem;text-align:right;">سعر الوحدة</th>
-                        <th style="padding:0.6rem;text-align:right;">الإجمالي</th>
-                        <th style="padding:0.6rem;text-align:right;">المشتري</th>
-                        <th style="padding:0.6rem;text-align:right;">الموظف</th>
-                        <th style="padding:0.6rem;text-align:right;">التاريخ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${salesLog.sort((a,b) => b.timestamp - a.timestamp).map((s, i) => `
+                    <thead style="background:#1a3a5c;color:white;">
                         <tr>
-                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${i + 1}</td>
-                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.itemName}</td>
-                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.quantity}</td>
-                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.unitPrice.toFixed(0)}</td>
-                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;font-weight:bold;">${s.total.toFixed(0)}</td>
-                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.buyer}</td>
-                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.employee}</td>
-                            <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.date}</td>
+                            <th style="padding:0.6rem;text-align:right;">#</th>
+                            <th style="padding:0.6rem;text-align:right;">السلعة</th>
+                            <th style="padding:0.6rem;text-align:right;">الكمية</th>
+                            <th style="padding:0.6rem;text-align:right;">سعر الوحدة</th>
+                            <th style="padding:0.6rem;text-align:right;">الإجمالي</th>
+                            <th style="padding:0.6rem;text-align:right;">المشتري</th>
+                            <th style="padding:0.6rem;text-align:right;">الموظف</th>
+                            <th style="padding:0.6rem;text-align:right;">التاريخ</th>
                         </tr>
-                    `).join('')}
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="8" style="padding:0.8rem;font-weight:bold;color:#1a3a5c;text-align:left;">
-                            الإجمالي الكلي: ${total.toFixed(0)} د.ع
-                        </td>
-                    </tr>
-                </tfoot>
-            `;
+                    </thead>
+                    <tbody>
+                        ${salesLog.sort((a,b) => b.timestamp - a.timestamp).map((s, i) => `
+                            <tr>
+                                <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${i + 1}</td>
+                                <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.itemName}</td>
+                                <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.quantity}</td>
+                                <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.unitPrice.toFixed(0)}</td>
+                                <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;font-weight:bold;">${s.total.toFixed(0)}</td>
+                                <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.buyer}</td>
+                                <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.employee}</td>
+                                <td style="padding:0.5rem 0.6rem;border-bottom:1px solid #ddd;">${s.date}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="8" style="padding:0.8rem;font-weight:bold;color:#1a3a5c;text-align:left;">
+                                الإجمالي الكلي: ${total.toFixed(0)} د.ع
+                            </td>
+                        </tr>
+                    </tfoot>
+                `;
 
             container.appendChild(title);
             container.appendChild(sub);
@@ -2098,7 +2090,6 @@
                 });
         }
 
-        // ====== PDF المواد المفيدة ======
         function generateMaterialsPDF() {
             const materials = [
                 { name: '📖 الموسوعة الشاملة', category: 'مرجع', quantity: 5 },
@@ -2131,10 +2122,10 @@
                 card.style.cssText =
                     'border:1px solid #ddd;border-radius:12px;padding:1.5rem;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
                 card.innerHTML = `
-                    <h3 style="color:#1a3a5c;margin-bottom:0.5rem;">${m.name}</h3>
-                    <p><span style="background:#c9a84c;color:white;padding:0.3rem 1rem;border-radius:20px;display:inline-block;font-size:0.85rem;">${m.category}</span></p>
-                    <p>الكمية: <strong>${m.quantity}</strong></p>
-                `;
+                        <h3 style="color:#1a3a5c;margin-bottom:0.5rem;">${m.name}</h3>
+                        <p><span style="background:#c9a84c;color:white;padding:0.3rem 1rem;border-radius:20px;display:inline-block;font-size:0.85rem;">${m.category}</span></p>
+                        <p>الكمية: <strong>${m.quantity}</strong></p>
+                    `;
                 grid.appendChild(card);
             });
 
